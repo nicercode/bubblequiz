@@ -14,7 +14,8 @@ generate_quiz_from_transcript(
 )
 }
 \arguments{
-\item{transcript}{Path to a transcript text file, or transcript text.}
+\item{transcript}{Path to a transcript text file, transcript text, a YouTube
+URL, or a local audio/video recording.}
 
 \item{config}{Path to the exam config YAML, or a loaded config list.}
 
