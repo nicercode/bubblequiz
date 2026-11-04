@@ -1,5 +1,7 @@
 ^tests/testthat/fixtures/synthetic-scan$
 ^\.github$
+^\.claude$
+^AGENTS\.md$
 ^LICENSE\.md$
 ^exam\.yml$
 ^example$

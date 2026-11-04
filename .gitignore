@@ -11,3 +11,4 @@ example/*
 !example/six-question-quiz/
 !example/six-question-quiz/**
 *.tar.gz
+.claude/settings.local.json

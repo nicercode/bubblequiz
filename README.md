@@ -1,6 +1,6 @@
 # bubblequiz
 
-[![R-CMD-check](https://github.com/wcornwell/bubblequiz/actions/workflows/R-CMD-check.yaml/badge.svg?branch=main)](https://github.com/wcornwell/bubblequiz/actions/workflows/R-CMD-check.yaml)
+[![R-CMD-check](https://github.com/nicercode/bubblequiz/actions/workflows/R-CMD-check.yaml/badge.svg?branch=main)](https://github.com/nicercode/bubblequiz/actions/workflows/R-CMD-check.yaml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE.md)
 ![R >= 4.1](https://img.shields.io/badge/R-%3E%3D%204.1-276DC3?logo=r&logoColor=white)
 
@@ -72,7 +72,7 @@ The package is the reusable engine. Each course keeps its own `exam.yml`,
 
 ```r
 # install.packages("remotes")
-remotes::install_github("wcornwell/bubblequiz")
+remotes::install_github("nicercode/bubblequiz")
 ```
 
 System tools (macOS with Homebrew shown):

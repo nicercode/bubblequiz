@@ -10,6 +10,8 @@ Description: An end-to-end toolkit for paper multiple-choice quizzes. Define the
     version-aware answer key. Designed to be installed once and called from
     any course repository.
 License: MIT + file LICENSE
+URL: https://github.com/nicercode/bubblequiz
+BugReports: https://github.com/nicercode/bubblequiz/issues
 Encoding: UTF-8
 Depends: R (>= 4.1)
 Imports:
