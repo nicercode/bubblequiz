@@ -92,7 +92,15 @@ relativise_figure_paths <- function(lines, from_dir, to_dir) {
   for (i in which(is_fig)) {
     path <- sub(figure_line_regex, "\\2", lines[i], perl = TRUE)
     if (grepl("^(/|[A-Za-z]:)", path)) next
-    new_path <- relative_path(file.path(from_dir, path), to_dir)
+    # relative_path() only works on paths that exist: normalizePath() leaves a
+    # missing one relative, and comparing it with an absolute `to_dir` yields
+    # a run of "../" that LaTeX later reports as file `/' not found.
+    src <- file.path(from_dir, path)
+    if (!file.exists(src)) {
+      stop("Figure not found: ", path, " (looked in ",
+           normalizePath(from_dir, mustWork = FALSE), ")", call. = FALSE)
+    }
+    new_path <- relative_path(src, to_dir)
     lines[i] <- sub(paste0("](", path, ")"), paste0("](", new_path, ")"), lines[i], fixed = TRUE)
   }
   lines
