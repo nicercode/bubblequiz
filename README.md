@@ -175,7 +175,8 @@ A question can show one figure, on its own line between the stem and the options
 ![Fig. 2 from Smith et al. (2021). Reproduced with permission.](figures/fig2.png){width=0.7}
 ```
 
-The path is relative to `questions.md`; `width` is a fraction of the text width
+The path is relative to `questions.md`, and a missing file stops
+`generate_versions()` with the path it looked for. `width` is a fraction of the text width
 (default 0.8); the caption is printed under the figure. Figures are capped in
 height by `layout.figure_max_height` in `exam.yml` (default `7cm`). Figures take
 up space on the answer sheet, which is capped at two pages, so keep them small
@@ -225,6 +226,42 @@ With moderately wordy questions:
 Multi-page forms are marked correctly (see
 [How it works](#how-it-works)), but a single sheet per student is easier to
 handle and scan.
+
+### Longer papers: question booklet and separate answer sheet
+
+For a test too long for inline forms (say 40 questions), print the questions
+as a booklet and collect a one-page bubble sheet:
+
+```r
+generate_versions("exam.yml", "questions.md", "output")
+render_papers("exam.yml", "output")      # questions_v*.pdf: booklet, never scanned
+make_bubblesheet("exam.yml", "output")   # bubblesheet_v*.pdf: one page, scanned
+calibrate_coords("exam.yml", "output/bubblesheet_v1.pdf",
+                 "output/layout.R", "output/layout_preview.jpeg")
+```
+
+The booklet has no page cap. Each question is kept on one page, the stem is
+set heavier than the options, option labels are A-E to match the bubbles, and
+the footer reads "Version n · Page x of y". The booklet and sheet are
+version-matched, so hand them out as per-version bundles.
+
+These `exam.yml` keys affect the booklet only. The answer sheet keeps
+`subtitle`, `instructions` and `sections`:
+
+```yaml
+paper_subtitle: "Question booklet"   # the default
+paper_instructions: "Record every answer on the separate answer sheet."
+paper_sections:                       # topic headings in the booklet only
+  - id: A
+    title: "Space"
+    questions: [1, 2, 3, 4, 5]
+  - id: B
+    title: "Time"
+    questions: [6, 7, 8, 9, 10]
+```
+
+Without `paper_sections`, the booklet takes its headings from `sections`, and
+only when there is more than one section.
 
 ## Printing and scanning
 

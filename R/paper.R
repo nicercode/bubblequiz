@@ -71,39 +71,109 @@ has_figures <- function(blocks) {
 }
 
 latex_question_paper <- function(cfg, blocks, version) {
+  # Option labels match the answer sheet's bubbles (A-E, not a-e), so a student
+  # reading "C" in the booklet fills bubble C without translating case.
+  # A section heading prints before the first question of each section.
+  # `paper_sections` in exam.yml groups the booklet only (e.g. by topic) and
+  # leaves the answer sheet as laid out by `sections`. Without it, the
+  # booklet uses `sections`, but only when there is more than one: a lone
+  # "Multiple choice" heading adds nothing.
+  heading_sections <- cfg$paper_sections %||%
+    (if (length(cfg$sections) > 1) cfg$sections else list())
+  section_head <- list()
+  if (length(heading_sections) > 0) {
+    for (s in heading_sections) {
+      nums <- sort(c(as.integer(unlist(s$questions)),
+                     vapply(s$essays %||% list(), function(e) as.integer(e$number), integer(1))))
+      if (length(nums) == 0 || is.null(s$title)) next
+      label <- if (!is.null(s$id)) sprintf("Section %s: %s", s$id, s$title) else s$title
+      range <- if (length(nums) > 1) sprintf("Questions %d--%d", min(nums), max(nums))
+               else sprintf("Question %d", nums)
+      section_head[[as.character(min(nums))]] <- c(
+        "\\vspace{6pt}",
+        sprintf("{\\large\\bfseries %s}\\hfill{\\small %s}\\par", tex_escape(label), range),
+        "\\vspace{2pt}\\rule{\\linewidth}{0.6pt}\\par\\nopagebreak\\vspace{10pt}\\nopagebreak"
+      )
+    }
+  }
+
   question_tex <- unlist(lapply(blocks, function(q) {
     opts <- q$options[tolower(cfg$options)]
     if (any(is.na(opts))) {
       stop("Question ", q$number, " is missing one or more options.", call. = FALSE)
     }
     c(
-      sprintf("\\textbf{Q%d.} %s\\par", q$number, tex_escape_math(q$question)),
+      section_head[[as.character(q$number)]],
+      # A minipage keeps each question -- stem, code, figure and every option --
+      # on one page; a question split across a page turn is easy to misread.
+      # The question number hangs in its own column; stem, code, figure and
+      # options sit in a block beside it. The stem is set in a heavier weight
+      # than the options so the question reads apart from the answers.
+      sprintf("\\noindent\\makebox[\\bqnumwidth][l]{\\bqnumstyle %d}%%", q$number),
+      "\\begin{minipage}[t]{\\dimexpr\\linewidth-\\bqnumwidth\\relax}",
+      sprintf("{\\bqstemstyle %s\\par}", tex_escape_math(q$question)),
       code_block_tex(q$code),
       tail_tex(q$tail),
       figure_tex(q$figure, cfg$figure_max_height),
-      "\\begin{enumerate}[label=\\alph*., leftmargin=1.8em]",
+      "\\begin{enumerate}[label=\\Alph*., leftmargin=1.9em, labelsep=0.5em, itemsep=2.5pt, parsep=0pt, topsep=6pt]",
       sprintf("  \\item %s", tex_escape_math(opts)),
       "\\end{enumerate}",
-      "\\vspace{4pt}"
+      "\\end{minipage}\\par",
+      "\\vspace{14pt plus 4pt minus 2pt}"
     )
   }), use.names = FALSE)
 
+  details <- c(
+    if (nzchar(cfg$date)) tex_escape(cfg$date),
+    if (nzchar(cfg$duration)) tex_escape(cfg$duration),
+    if (!is.na(cfg$total_marks)) sprintf("%s marks", tex_escape(as.character(cfg$total_marks)))
+  )
+  instructions <- cfg$paper_instructions %||%
+    "Record every answer on the separate answer sheet. Only the answer sheet is marked."
+  footer <- sprintf("%s \\textbullet{} Version %s", tex_escape(cfg$title), tex_escape(version))
+
   c(
     "\\documentclass[11pt, a4paper]{article}",
-    "\\usepackage[a4paper, left=1.8cm, right=1.8cm, top=1.4cm, bottom=1.4cm]{geometry}",
+    "\\usepackage[a4paper, left=2cm, right=2cm, top=1.6cm, bottom=2cm, footskip=1cm]{geometry}",
     "\\usepackage{fontspec}",
     MAIN_FONT_TEX,
     CODE_TEX_PREAMBLE,
     "\\usepackage{enumitem}",
+    "\\usepackage{ragged2e}",
+    "\\usepackage{lastpage}",
+    "\\usepackage{fancyhdr}",
+    "\\usepackage{xcolor}",
     if (has_figures(blocks)) "\\usepackage{graphicx}",
     "\\setlength{\\parindent}{0pt}",
-    "\\setlength{\\parskip}{2pt}",
+    "\\setlength{\\parskip}{0pt}",
+    # Stem weight: Helvetica Neue Medium where it exists (macOS), else bold.
+    "\\IfFontExistsTF{Helvetica Neue Medium}{\\newfontface\\bqstemface{Helvetica Neue Medium}\\newcommand{\\bqstemstyle}{\\bqstemface}}{\\newcommand{\\bqstemstyle}{\\bfseries}}",
+    "\\newcommand{\\bqnumstyle}{\\large\\bfseries}",
+    "\\newlength{\\bqnumwidth}\\setlength{\\bqnumwidth}{2.4em}",
+    # Ragged right, no hyphenation, single space after full stops: easier to
+    # read under exam conditions than justified text with split words.
+    "\\RaggedRight",
+    "\\frenchspacing",
+    "\\hyphenpenalty=10000",
+    "\\exhyphenpenalty=10000",
+    "\\linespread{1.08}",
+    "\\pagestyle{fancy}",
+    "\\fancyhf{}",
+    "\\renewcommand{\\headrulewidth}{0pt}",
+    sprintf("\\fancyfoot[L]{\\footnotesize %s}", footer),
+    "\\fancyfoot[R]{\\footnotesize Page \\thepage\\ of \\pageref{LastPage}}",
     "\\begin{document}",
-    sprintf("\\noindent{\\LARGE\\bfseries %s}\\hfill{\\large\\bfseries Version %s}\\\\[1pt]",
+    "\\thispagestyle{fancy}",
+    sprintf("{\\LARGE\\bfseries %s}\\hfill\\colorbox{black}{\\textcolor{white}{\\large\\bfseries\\quad Version %s\\quad}}\\par",
             tex_escape(cfg$title), tex_escape(version)),
-    sprintf("{\\normalsize %s}\\\\[2pt]", tex_escape(cfg$subtitle)),
-    "\\rule{\\linewidth}{1pt}",
-    "\\vspace{6pt}",
+    "\\vspace{3pt}",
+    sprintf("{\\normalsize %s}\\hfill{\\normalsize %s}\\par",
+            tex_escape(cfg$paper_subtitle %||% "Question booklet"),
+            paste(details, collapse = " \\textbar{} ")),
+    "\\vspace{4pt}\\rule{\\linewidth}{1pt}\\par\\vspace{6pt}",
+    sprintf("\\fbox{\\parbox{\\dimexpr\\linewidth-2\\fboxsep-2\\fboxrule}{\\RaggedRight %s}}\\par",
+            tex_escape(instructions)),
+    "\\vspace{14pt}",
     question_tex,
     "\\end{document}"
   )
