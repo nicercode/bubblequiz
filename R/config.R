@@ -188,6 +188,13 @@ load_exam_config <- function(path = default_config_path()) {
     # Tallest a figure may be on a question (LaTeX length); width is scaled to match.
     figure_max_height = as.character(y$layout$figure_max_height %||% "7cm"),
     instructions = y$instructions %||% NULL,
+    # Question booklet only (render_papers): its subtitle and its instruction
+    # box. The answer sheet keeps `subtitle` and `instructions`.
+    paper_subtitle     = y$paper_subtitle     %||% NULL,
+    paper_instructions = y$paper_instructions %||% NULL,
+    # Optional booklet-only grouping: list of {id, title, questions}. Headings
+    # in the question booklet; no effect on the answer sheet or marking.
+    paper_sections     = y$paper_sections     %||% NULL,
     sections     = y$sections
   )
 
