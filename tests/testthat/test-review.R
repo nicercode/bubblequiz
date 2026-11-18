@@ -270,6 +270,7 @@ test_that("a zID not on the roster is held for review, with the closest names", 
 })
 
 test_that("roster suggestions are one digit off or the same digits swapped", {
+  # Fake zIDs: UNSW does not issue z9 numbers. Never use real student zIDs in tests.
   ros <- data.frame(zid = c("z9681797", "z9757355", "z9758557", "z9759555"),
                     name = c("A", "B", "C", "D"), stringsAsFactors = FALSE)
   expect_equal(roster_miss_reason("z9621797", ros), "zID not on roster; closest: z9681797 A")
