@@ -296,7 +296,7 @@ render_xelatex <- function(tex_path, outdir = dirname(tex_path)) {
   on.exit(setwd(wd), add = TRUE)
 
   for (pass in 1:2) {
-    status <- system2("xelatex", args, stdout = FALSE, stderr = FALSE)
+    status <- system2("xelatex", shQuote(args), stdout = FALSE, stderr = FALSE)
   }
   pdf_path <- file.path(outdir, paste0(job, ".pdf"))
   # nonstopmode carries on past errors and usually still writes a PDF -- a

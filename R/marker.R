@@ -841,7 +841,7 @@ decode_qr_cv <- function(img_path) {
     return(list(payload = found[[1]], note = ""))
   }
   out <- tryCatch(
-    system2("zbarimg", c("--quiet", "--raw", img_path), stdout = TRUE, stderr = TRUE),
+    system2("zbarimg", c("--quiet", "--raw", shQuote(img_path)), stdout = TRUE, stderr = TRUE),
     warning = function(w) structure(character(0), status = 1L),
     error = function(e) structure(character(0), status = 1L)
   )
